@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/match_provider.dart';
+import '../providers/scoring_provider.dart';
 import 'target_assignment_demo_page.dart';
 import 'match_detail_page.dart';
 
@@ -125,7 +126,43 @@ class _HomePageState extends State<HomePage> {
                       Text('Max targets: ${match.maxTargets}'),
                     ],
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) => _handleMatchAction(context, match, value),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'open',
+                        child: ListTile(
+                          leading: Icon(Icons.open_in_new),
+                          title: Text('Open Match'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('Edit Match'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'reset',
+                        child: ListTile(
+                          leading: Icon(Icons.refresh),
+                          title: Text('Reset Scores'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete, color: Colors.red),
+                          title: Text('Delete Match', style: TextStyle(color: Colors.red)),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -279,6 +316,158 @@ class _HomePageState extends State<HomePage> {
           ],
         );
       },
+    );
+  }
+
+  void _handleMatchAction(BuildContext context, match, String action) {
+    switch (action) {
+      case 'open':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MatchDetailPage(match: match),
+          ),
+        );
+        break;
+      case 'edit':
+        _showEditMatchDialog(context, match);
+        break;
+      case 'reset':
+        _showResetScoresDialog(context, match);
+        break;
+      case 'delete':
+        _showDeleteMatchDialog(context, match);
+        break;
+    }
+  }
+
+  void _showEditMatchDialog(BuildContext context, match) {
+    final titleController = TextEditingController(text: match.title);
+    final descriptionController = TextEditingController(text: match.description ?? '');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Match'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Match Title',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedMatch = match.copyWith(
+                title: titleController.text.trim(),
+                description: descriptionController.text.trim().isNotEmpty 
+                    ? descriptionController.text.trim() 
+                    : null,
+              );
+              
+              final matchProvider = Provider.of<MatchProvider>(context, listen: false);
+              await matchProvider.updateMatch(updatedMatch);
+              
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Match updated successfully')),
+                );
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetScoresDialog(BuildContext context, match) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Scores'),
+        content: Text(
+          'Are you sure you want to reset all scores for "${match.title}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final scoringProvider = Provider.of<ScoringProvider>(context, listen: false);
+              await scoringProvider.resetMatchScores(match.matchId);
+              
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Match scores reset successfully')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: const Text('Reset Scores'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteMatchDialog(BuildContext context, match) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Match'),
+        content: Text(
+          'Are you sure you want to delete "${match.title}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final matchProvider = Provider.of<MatchProvider>(context, listen: false);
+              await matchProvider.deleteMatch(match.matchId);
+              
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Match deleted successfully')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }

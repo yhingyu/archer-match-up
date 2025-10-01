@@ -22,40 +22,35 @@ class _ArrowInputWidgetState extends State<ArrowInputWidget> {
 
   Color _getArrowColor(String arrow) {
     if (arrow.isEmpty) return Colors.grey[300]!;
-    if (arrow.toUpperCase() == 'X') return const Color(0xFFFFD700); // Bright Yellow
+    if (arrow.toUpperCase() == 'X') return const Color(0xFFFFD700); // Gold
     if (arrow.toUpperCase() == 'M') return const Color(0xFF808080); // Gray
     final score = int.tryParse(arrow);
     if (score != null) {
-      if (score == 10) return const Color(0xFFFFFACD); // Light Yellow
-      if (score == 9) return const Color(0xFFFFD700); // Bright Yellow
+      if (score == 10) return const Color(0xFFFFA500); // Orange Gold
+      if (score == 9) return const Color(0xFFDC143C); // Crimson Red
       if (score == 8) return const Color(0xFFB22222); // Fire Brick Red
-      if (score == 7) return const Color(0xFFDC143C); // Crimson Red
-      if (score == 6) return const Color(0xFF4169E1); // Light Blue
-      if (score == 5) return const Color(0xFF0066CC); // Royal Blue
-      if (score == 4) return const Color(0xFF1C1C1C); // Black
-      if (score == 3) return const Color(0xFF2C2C2C); // Dark Black
-      if (score == 2) return const Color(0xFFFFFFFF); // Pure White
-      if (score == 1) return const Color(0xFFF5F5F5); // White
+      if (score == 7) return const Color(0xFF0066CC); // Royal Blue
+      if (score == 6) return const Color(0xFF4169E1); // Royal Blue
+      if (score == 5) return const Color(0xFF2C2C2C); // Dark Gray
+      if (score == 4) return const Color(0xFF1C1C1C); // Darker Gray
+      if (score == 3) return const Color(0xFFF5F5F5); // White Gray
+      if (score == 2) return const Color(0xFFE8E8E8); // Light Gray
+      if (score == 1) return const Color(0xFFD3D3D3); // Light Gray
     }
     return Colors.grey[300]!;
   }
 
   Color _getArrowTextColor(String arrow) {
     if (arrow.isEmpty) return Colors.black;
-    if (arrow.toUpperCase() == 'X') return Colors.black; // Yellow background
-    if (arrow.toUpperCase() == 'M') return Colors.white; // Gray background
+    if (arrow.toUpperCase() == 'X') return Colors.black;
+    if (arrow.toUpperCase() == 'M') return Colors.white;
     final score = int.tryParse(arrow);
     if (score != null) {
-      if (score == 10) return Colors.black; // Light Yellow background
-      if (score == 9) return Colors.black;  // Yellow background
-      if (score == 8) return Colors.white;  // Red background
-      if (score == 7) return Colors.white;  // Red background
-      if (score == 6) return Colors.white;  // Blue background
-      if (score == 5) return Colors.white;  // Blue background
-      if (score == 4) return Colors.white;  // Black background
-      if (score == 3) return Colors.white;  // Black background
-      if (score == 2) return Colors.black;  // White background
-      if (score == 1) return Colors.black;  // White background
+      if (score >= 9) return Colors.black;  // Gold background
+      if (score >= 7) return Colors.white;  // Red background
+      if (score >= 5) return Colors.white;  // Blue background
+      if (score >= 3) return Colors.black;  // White background
+      return Colors.black;  // Light backgrounds
     }
     return Colors.black;
   }
@@ -87,46 +82,22 @@ class _ArrowInputWidgetState extends State<ArrowInputWidget> {
                         Text('Arrow ${index + 1}', 
                           style: Theme.of(context).textTheme.labelSmall),
                         const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: widget.isEnabled && index < _arrows.length ? () {
-                            setState(() {
-                              // Remove this arrow and all arrows after it
-                              _arrows.removeRange(index, _arrows.length);
-                            });
-                          } : null,
-                          child: Container(
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: _getArrowColor(index < _arrows.length ? _arrows[index] : ''),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: index < _arrows.length ? Colors.grey : Colors.grey[400]!,
-                                width: index < _arrows.length ? 2 : 1,
-                              ),
-                            ),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    index < _arrows.length && _arrows[index].isNotEmpty 
-                                        ? _arrows[index] 
-                                        : '-',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: _getArrowTextColor(index < _arrows.length ? _arrows[index] : ''),
-                                    ),
-                                  ),
-                                  if (index < _arrows.length)
-                                    Text(
-                                      'Tap to remove',
-                                      style: TextStyle(
-                                        fontSize: 8,
-                                        color: _getArrowTextColor(index < _arrows.length ? _arrows[index] : '').withOpacity(0.7),
-                                      ),
-                                    ),
-                                ],
+                        Container(
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: _getArrowColor(index < _arrows.length ? _arrows[index] : ''),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: Center(
+                            child: Text(
+                              index < _arrows.length && _arrows[index].isNotEmpty 
+                                  ? _arrows[index] 
+                                  : '-',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: _getArrowTextColor(index < _arrows.length ? _arrows[index] : ''),
                               ),
                             ),
                           ),
@@ -157,6 +128,22 @@ class _ArrowInputWidgetState extends State<ArrowInputWidget> {
             // Action buttons
             Row(
               children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: widget.isEnabled && _arrows.isNotEmpty ? () {
+                      setState(() {
+                        if (_arrows.isNotEmpty) {
+                          _arrows.removeLast();
+                        }
+                      });
+                    } : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange[600],
+                    ),
+                    child: const Text('Remove Last'),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: widget.isEnabled && _arrows.isNotEmpty ? () {

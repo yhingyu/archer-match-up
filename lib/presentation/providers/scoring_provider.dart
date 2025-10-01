@@ -129,4 +129,43 @@ class ScoringProvider extends ChangeNotifier {
     });
     return sortedScores;
   }
+
+  Future<void> resetMatchScores(String matchId) async {
+    try {
+      _setLoading(true);
+      _error = null;
+
+      // Clear all scores for this match
+      for (final scoreWithUser in _scores) {
+        // Reset the score while keeping the user reference
+        final resetScore = MatchScore(
+          scoreId: scoreWithUser.score.scoreId,
+          matchId: matchId,
+          userId: scoreWithUser.user.userId,
+          ends: [], // Clear all ends
+          totalScore: 0,
+          currentRound: 1,
+          currentEnd: 1,
+          isComplete: false,
+          createdAt: scoreWithUser.score.createdAt,
+        );
+        
+        await _getMatchScores.repository.updateScore(resetScore);
+      }
+
+      // Reload scores to show the reset
+      await loadScores(matchId);
+      
+      if (kDebugMode) {
+        print('Match scores reset for match: $matchId');
+      }
+    } catch (e) {
+      _error = e.toString();
+      if (kDebugMode) {
+        print('Error resetting match scores: $e');
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
 }

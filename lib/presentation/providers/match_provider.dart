@@ -56,6 +56,44 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateMatch(Match match) async {
+    try {
+      _setLoading(true);
+      _error = null;
+      
+      await _matchRepository.updateMatch(match);
+      
+      // Reload matches to show the updated one
+      await loadMatches();
+    } catch (e) {
+      _error = e.toString();
+      if (kDebugMode) {
+        print('Error updating match: $e');
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> deleteMatch(String matchId) async {
+    try {
+      _setLoading(true);
+      _error = null;
+      
+      await _matchRepository.deleteMatch(matchId);
+      
+      // Reload matches to remove the deleted one
+      await loadMatches();
+    } catch (e) {
+      _error = e.toString();
+      if (kDebugMode) {
+        print('Error deleting match: $e');
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> createMatch({
     required String name,
     required int distance,

@@ -47,7 +47,7 @@ class _MatchScoringPageState extends State<MatchScoringPage>
 
   void _loadTargetAssignments() async {
     final registrationProvider = Provider.of<RegistrationProvider>(context, listen: false);
-    final registrationsWithUsers = await registrationProvider.getAcceptedRegistrations(widget.match.matchId);
+    final registrationsWithUsers = registrationProvider.getAcceptedRegistrations();
     
     final archers = registrationsWithUsers.map((regWithUser) => regWithUser.user).toList();
     
